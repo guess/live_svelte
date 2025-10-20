@@ -10,6 +10,7 @@ defmodule LiveSvelte do
   import LiveSvelte.LiveJson
 
   alias Phoenix.LiveView
+  alias LiveSvelte.Config
   alias LiveSvelte.Slots
   alias LiveSvelte.SSR
 
@@ -54,7 +55,7 @@ defmodule LiveSvelte do
   def svelte(assigns) do
     init = assigns.__changed__ == nil
     dead = assigns.socket == nil or not LiveView.connected?(assigns.socket)
-    ssr_active = Application.get_env(:live_svelte, :ssr, true)
+    ssr_active = Config.ssr_enabled?()
 
     if init and ssr_active and assigns.ssr and assigns.loading != [] do
       IO.warn(
@@ -128,7 +129,7 @@ defmodule LiveSvelte do
   end
 
   defp json(props) do
-    Jason.encode!(props)
+    Config.json_library().encode!(props)
   end
 
   defp id(name), do: "#{name}-#{System.unique_integer([:positive])}"

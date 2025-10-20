@@ -22,6 +22,8 @@ if Code.ensure_loaded?(Bun) do
     The server.js file should be built and available at `priv/svelte/server.js`.
     """
 
+    alias LiveSvelte.Config
+
     @behaviour LiveSvelte.SSR
 
     @impl LiveSvelte.SSR
@@ -33,12 +35,17 @@ if Code.ensure_loaded?(Bun) do
         # Call Bun to execute the wrapper with server_path, component name, props, and slots
         case Bun.call(
                wrapper_path,
-               [server_path, name, Jason.encode!(props), Jason.encode!(slots)],
+               [
+                 server_path,
+                 name,
+                 Config.json_library().encode!(props),
+                 Config.json_library().encode!(slots)
+               ],
                cd: Path.dirname(server_path),
                timeout: 5000
              ) do
           {:ok, output} ->
-            Jason.decode!(output)
+            Config.json_library().decode!(output)
 
           {:error, {exit_code, output}} ->
             raise """
@@ -74,7 +81,7 @@ if Code.ensure_loaded?(Bun) do
     importing the server.js module and calling the render function.
     """
     def wrapper_path do
-      :code.priv_dir(:live_svelte, "bun_ssr_wrapper.js")
+      Path.join(:code.priv_dir(:live_svelte), "bun_ssr_wrapper.js")
     end
   end
 end

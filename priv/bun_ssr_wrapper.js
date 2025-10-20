@@ -24,5 +24,12 @@ const slots = JSON.parse(slotsJson);
 // Call the render function
 const result = render(componentName, props, slots);
 
+// Access the getters to extract the actual values
+const output = {
+  html: result.html,
+  head: result.head,
+  body: result.body
+};
+
 // Output the result as JSON
-console.log(JSON.stringify(result));
+console.log(JSON.stringify(output));

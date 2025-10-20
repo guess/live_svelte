@@ -27,32 +27,42 @@ defmodule Mix.Tasks.LiveSvelte.ConfigurePhoenix do
     Mix.Task.run("format")
   end
 
-  defp configure_dev_config() do
+  defp configure_dev_config do
     text = ~s"""
     node: ["build.js", "--watch", cd: Path.expand("../assets", __DIR__)],\
     """
 
     {path, file} = path_and_file("config/", "dev.exs")
 
-    File.read!(path)
+    path
+    |> File.read!()
     |> insert(@watcher_regex, text, "'#{text}' in #{file}")
     |> comment(@esbuild_regex, "old esbuild watcher in #{file}")
     |> save(path)
   end
 
-  defp configure_application() do
-    text = ~s"""
-    {NodeJS.Supervisor, [path: LiveSvelte.SSR.NodeJS.server_path(), pool_size: 4]},\
-    """
+  defp configure_application do
+    # Check if Bun is available, otherwise fall back to NodeJS
+    text =
+      if Code.ensure_loaded?(Bun) do
+        ~s"""
+        {Bun.Supervisor, [pool_size: 4]},\
+        """
+      else
+        ~s"""
+        {NodeJS.Supervisor, [path: LiveSvelte.SSR.NodeJS.server_path(), pool_size: 4]},\
+        """
+      end
 
     {path, file} = path_and_file("lib/**/", "application.ex")
 
-    File.read!(path)
+    path
+    |> File.read!()
     |> insert(@nodejs_regex, text, "'#{text}' in #{file}")
     |> save(path)
   end
 
-  defp configure_gitignore() do
+  defp configure_gitignore do
     text = ~s"""
 
 
@@ -65,7 +75,8 @@ defmodule Mix.Tasks.LiveSvelte.ConfigurePhoenix do
 
     {path, file} = path_and_file("", ".gitignore")
 
-    File.read!(path)
+    path
+    |> File.read!()
     |> insert(@gitignore_regex, text, "'#{text}' in #{file}")
     |> save(path)
   end
@@ -75,9 +86,8 @@ defmodule Mix.Tasks.LiveSvelte.ConfigurePhoenix do
   end
 
   defp find_file(wildcard, file_name) do
-    with [path] <- Path.wildcard(wildcard) do
-      path
-    else
+    case Path.wildcard(wildcard) do
+      [path] -> path
       [] -> raise "Could not find #{file_name}"
       [_ | _] -> raise "Found multiple #{file_name} files"
     end

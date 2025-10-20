@@ -1,9 +1,9 @@
-defmodule LiveSvelte.SSR.NodeJS do
-  @moduledoc false
-  @behaviour LiveSvelte.SSR
+if Code.ensure_loaded?(NodeJS) do
+  defmodule LiveSvelte.SSR.NodeJS do
+    @moduledoc false
+    @behaviour LiveSvelte.SSR
 
-  def render(name, props, slots) do
-    try do
+    def render(name, props, slots) do
       NodeJS.call!({"server", "render"}, [name, props, slots], binary: true)
     catch
       :exit, {:noproc, _} ->
@@ -14,10 +14,10 @@ defmodule LiveSvelte.SSR.NodeJS do
 
         raise %LiveSvelte.SSR.NotConfigured{message: message}
     end
-  end
 
-  def server_path() do
-    {:ok, path} = :application.get_application()
-    Application.app_dir(path, "/priv/svelte")
+    def server_path do
+      {:ok, path} = :application.get_application()
+      Application.app_dir(path, "/priv/svelte")
+    end
   end
 end

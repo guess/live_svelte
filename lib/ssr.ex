@@ -8,7 +8,27 @@ defmodule LiveSvelte.SSR do
   @moduledoc """
   A behaviour for rendering Svelte components server-side.
 
-  To define a custom renderer, change the application config in `config.exs`:
+  ## Default Renderer
+
+  By default, LiveSvelte uses `LiveSvelte.SSR.NodeJS` for server-side rendering.
+
+  ## Bun Renderer
+
+  If you have the `bun` package installed, you can use the faster Bun runtime instead:
+
+      config :live_svelte, ssr_module: LiveSvelte.SSR.Bun
+
+  And configure your application supervisor:
+
+      children = [
+        {Bun.Supervisor, [pool_size: 4]},
+        # ... other children
+      ]
+
+  ## Custom Renderer
+
+  To define a custom renderer, implement the `LiveSvelte.SSR` behaviour and
+  change the application config in `config.exs`:
 
       config :live_svelte, ssr_module: MyCustomSSRModule
   """
@@ -45,8 +65,10 @@ defmodule LiveSvelte.SSR do
     mod.render(name, props, slots)
   end
 
-  @deprecated "Use LiveSvelte.SSR.NodeJS.server_path/0 instead."
-  def server_path() do
-    LiveSvelte.SSR.NodeJS.server_path()
+  if Code.ensure_loaded?(NodeJS) do
+    @deprecated "Use LiveSvelte.SSR.NodeJS.server_path/0 instead."
+    def server_path do
+      LiveSvelte.SSR.NodeJS.server_path()
+    end
   end
 end

@@ -30,7 +30,6 @@
         "paths": {
             "$lib": ["svelte"],
             "$lib/*": ["svelte/*"],
-            "$deps/*": ["../deps/*"],
             "*": ["node_modules/*"]
         },
         "allowJs": true,
